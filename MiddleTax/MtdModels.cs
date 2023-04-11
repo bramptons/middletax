@@ -1,9 +1,10 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using Azure.Data.tables;
 
 namespace MiddleTax
 {
-    public class Obligation
+    public class Obligation : ITableEntity
     {
         public string Start { get; set; }
         public string End { get; set; }
@@ -11,6 +12,10 @@ namespace MiddleTax
         public string Status { get; set; }
         public string PeriodKey { get; set; }
         public string? Received { get; set; }
+        [Required]
+        public string RowKey { get; set; }
+        [Required]
+        public string PartitionKey { get; set; }
     }
     public class GetObligation
     {
@@ -30,7 +35,7 @@ namespace MiddleTax
         [StringLength(1, ErrorMessage = "Obligation status to return O= Open, F= Fulfilled. Omit status to retrieve all obligations.")]
         public string Status {get; set;}
     }
-    public class Returns
+    public class Returns : ITableEntity
     {
         [Required]
         [StringLength(4, ErrorMessage = "Max and min length is 4, The ID code the obligation belongs to, is alpha numeric and occasionally the format includes #")]
@@ -73,6 +78,10 @@ namespace MiddleTax
         [Required]
         [Display(Name = "Finalised")]
         public bool finalised { get; set; }
+        [Required]
+        public string RowKey { get; set; }
+        [Required]
+        public string PartitionKey { get; set; }
     }
     public class ReturnReturns
     {
