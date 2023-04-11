@@ -11,6 +11,7 @@ using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
+using Azure.Data.Tables;
 
 namespace MiddleTax
 {
@@ -62,16 +63,23 @@ namespace MiddleTax
             dynamic data = JsonConvert.DeserializeObject(requestBody);
             
             switch(recordType){
-                case "x1": _logger.LogInformation("x1");
-                    await WriteX1toDb(requestBody);
+                case "rVatObligations": _logger.LogInformation("Retrieve VAT Obligations");
+                    await WriteToModel(requestBody, recordType);
                     break;
-                case "x2": _logger.LogInformation("x1");
+                case "vVatReturn": _logger.LogInformation("View VAT return");
+                    await WriteToModel(requestBody, recordType);
                     break;
-                case "x3": _logger.LogInformation("x1");
+                case "rVatLiabilities": _logger.LogInformation("Retrieve VAT liabilities");
+                    await WriteToModel(requestBody, recordType);
                     break;
-                case "x4": _logger.LogInformation("x1");
+                case "rVatPayments": _logger.LogInformation("Retrieve VAT payments");
+                    await WriteToModel(requestBody, recordType);
                     break;
-                case "x5": _logger.LogInformation("x1");
+                case "rVatPenalities": _logger.LogInformation("Retrieve VAT penalties");
+                    await WriteToModel(requestBody, recordType);
+                    break;
+                case "rFinancialDetails": _logger.LogInformation("Retrieve financial details");
+                    await WriteToModel(requestBody, recordType);
                     break;
                 case null: _logger.LogInformation($"{recordType}: {requestBody}"); 
                     break;
@@ -84,12 +92,45 @@ namespace MiddleTax
             return new OkObjectResult(responseMessage);
         }
 
-        private async Task WriteX1toDb(dynamic data)
+        private async Task WriteToModel(dynamic data, string recordType)
         {
             //convert data into the right model
-            //write to database
-            MtdModels.
-        }        
+            //Create a database service
+            TableServiceClient tableServiceClient = new(Environment.GetEnvironmentVariable("AZURITE_ACCOUNTS"));
+
+            //add a VAT obligation to the table
+            if(recordType == "rVatObligations"){
+                Obligation obligation = new (){
+                    Start = data.Start,
+                    End = data.End,
+                    Due = data.Due,
+                    Status = data.Status,
+                    PeriodKey = data.PeriodKey,
+                    Received = data.Received,
+                    PartitionKey = recordType,
+                    RowKey = "QuarteyLimited"
+                }
+                //write to the table service
+                await tableServiceClient.AddEntityAsync<Obligation>(obligation);
+            }
+            //add a VAT return to the table
+            if(recordType == "vVatReturn"){
+                Returns returns = new (){
+                    periodKey = data.periodKey,
+                    vatDueSales = data.vatDueSales,
+                    vatDueAcquisitions = data.vatDueAcquisitions,
+                    totalVatDue = data totalVatDue,
+                    vatReclaimedCurrPeriod = data.vatReclaimedCurrPeriod,
+                    netVatDue = data.netVatDue,
+                    totalValueSalesExVAT = data.totalValueSalesExVAT,
+                    totalValueGoodsSuppliedExVAT = data.totalValueGoodsSuppliedExVAT,
+                    totalAcquisitionsExVAT = data.totalAcquisitionsExVAT
+                    finalised = data.finalised,
+                    PartitionKey = recordType,
+                    RowKey = "QuarteyLimited"
+                }
+                await tableServiceClient.AddEntityAsync<Returns>(returns);
+            }
+        }
     }
 }
-
